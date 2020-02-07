@@ -20,6 +20,22 @@ namespace Anonfileuploader
         {
             InitializeComponent();
         }
+        public const int WM_NCLBUTTONDOWN = 0xA1;
+        public const int HT_CAPTION = 0x2;
+
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        [DllImport("user32.dll")]
+        public static extern bool ReleaseCapture();
+
+        private void Form1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+            }
+        }
         public static string ApiKey { get; set; } = null;
         private void textBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -48,6 +64,10 @@ namespace Anonfileuploader
                 var setter = new apikeysetter();
                 var result = setter.ShowDialog(); // maybe check if the form was closed by the button idk
             }
+            UploadFile(textBox1.Text);
+        }
+        private void UploadFile(string filepath)
+        {
             using (WebClient client = new WebClient())
             {
                 string formattedapikey = "?token=" + ApiKey;
@@ -56,7 +76,6 @@ namespace Anonfileuploader
                 client.UploadProgressChanged += UploadProgressChanged;
             }
         }
-
         private void UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
         {
             progresslabel.Text = e.ProgressPercentage.ToString();
@@ -64,6 +83,7 @@ namespace Anonfileuploader
 
         private void UploadFileCompleted(object sender, UploadFileCompletedEventArgs e)
         {
+            progresslabel.Text = "";
             if(e.Error != null)
             {
                 MessageBox.Show(e.Error.Message);
@@ -80,7 +100,7 @@ namespace Anonfileuploader
                 var upload = Anon.AnonUploadSuccess.FromJson(response);
                 OpenUrl(upload.Data.File.Url.Short.ToString());
             }
-            MessageBox.Show("Upload Complete");
+            // MessageBox.Show("Upload Complete");
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -123,7 +143,22 @@ namespace Anonfileuploader
                 }
             }
         }
+        private void Form1_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+        }
 
+        private void Form1_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            foreach (string file in files)
+            {
+                UploadFile(file);
+            }
+        }
     }
 }
 

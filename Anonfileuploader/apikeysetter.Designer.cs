@@ -67,6 +67,7 @@
             this.Name = "apikeysetter";
             this.Text = "apikeysetter";
             this.Load += new System.EventHandler(this.apikeysetter_Load);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
             this.ResumeLayout(false);
             this.PerformLayout();
 
